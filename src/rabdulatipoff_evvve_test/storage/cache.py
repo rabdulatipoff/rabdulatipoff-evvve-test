@@ -1,7 +1,7 @@
 import emcache
 from typing import Iterable
 from contextlib import asynccontextmanager
-from ..config import memcache_config, cache_expiration
+from rabdulatipoff_evvve_test.config import memcache_config, cache_expiration
 
 
 class Cache:

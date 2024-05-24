@@ -1,9 +1,9 @@
 import json
 from typing import Iterable
-from .schemas import CoinPricePoint
-from .cache import Cache
-from ..parser import ExchangeAPIParser
-from ..config import default_quote_coin
+from rabdulatipoff_evvve_test.storage.schemas import CoinPricePoint
+from rabdulatipoff_evvve_test.storage.cache import Cache
+from rabdulatipoff_evvve_test.api.parser import ExchangeAPIParser
+from rabdulatipoff_evvve_test.config import default_quote_coin
 
 
 class PricesClient:
@@ -15,16 +15,17 @@ class PricesClient:
     async def get_by_coin_name(
         base_coin: str, quote_coin: str = default_quote_coin
     ) -> CoinPricePoint | None:
-        pair_name = base_coin.upper() + quote_coin.upper()
-        quote_pairs = json.loads(await Cache.get(quote_coin) or "[]")
-        if not quote_pairs:
+        coin_name = base_coin.upper()
+        available_coins = json.loads(await Cache.get(quote_coin) or "[]")
+        if not available_coins:
             # Parse the exchanges and update the coin index
             await ExchangeAPIParser.parse(quote_coin=quote_coin)
 
-        if pair_name in quote_pairs:
-            price = json.loads(await Cache.get(Cache.get_path(pair_name)) or "{}")
+        if coin_name in available_coins:
+            price = json.loads(
+                await Cache.get(Cache.get_path((quote_coin, coin_name))) or "{}"
+            )
             if not price:
                 return None
 
             return CoinPricePoint(**price)
-        return None

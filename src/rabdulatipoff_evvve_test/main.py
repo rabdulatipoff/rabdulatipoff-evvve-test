@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from .config import api_prefix
-from .routes import prices_router
+from rabdulatipoff_evvve_test.config import api_prefix
+from rabdulatipoff_evvve_test.api.routes import prices_router
 
 
 app = FastAPI()

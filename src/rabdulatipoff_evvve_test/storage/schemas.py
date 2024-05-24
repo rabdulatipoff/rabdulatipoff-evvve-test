@@ -1,6 +1,6 @@
 from decimal import Decimal
 from pydantic import BaseModel, Field
-from ..config import default_base_coin, default_quote_coin
+from rabdulatipoff_evvve_test.config import default_base_coin, default_quote_coin
 
 
 class CoinPair(BaseModel):

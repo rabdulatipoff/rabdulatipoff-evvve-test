@@ -3,12 +3,13 @@ import asyncio
 from typing import Iterable
 from decimal import Decimal
 from aiohttp_retry import RetryClient, ExponentialRetry
-from .storage.cache import Cache
-from .storage.schemas import CoinPair, CoinLastPrices, CoinPricePoint
-from .config import (
-    parse_endpoints,
-    default_quote_coin,
+from rabdulatipoff_evvve_test.storage.cache import Cache
+from rabdulatipoff_evvve_test.storage.schemas import (
+    CoinPair,
+    CoinLastPrices,
+    CoinPricePoint,
 )
+from rabdulatipoff_evvve_test.config import parse_endpoints, default_quote_coin
 
 
 class ExchangeAPIParser:
@@ -63,18 +64,20 @@ class ExchangeAPIParser:
     async def pairs_to_prices(
         cls,
         pairs_dict: dict,
+        quote_coin: str = default_quote_coin,
         exchanges: Iterable[str] = ("binance", "bybit"),
         save: bool = True,
     ) -> tuple[CoinPricePoint]:
         async def save_price(p: CoinPricePoint):
-            await Cache.set(Cache.get_path(p.name), p.json())
+            await Cache.set(Cache.get_path((quote_coin, p.name)), p.json())
 
         # NOTE: all provided coin pairs must exist for every exchange
         target_pairs = zip(*(pairs_dict[name] for name in exchanges))
 
         coin_prices = tuple(
             CoinPricePoint(
-                name=pairs_tuple[0].name,
+                # Remove the quote coin name from the pair name
+                name=pairs_tuple[0].name.replace(quote_coin, ""),
                 prices=CoinLastPrices(
                     **{
                         name: pairs_tuple[idx].price
@@ -123,9 +126,9 @@ class ExchangeAPIParser:
             for name, pairs in exchange_pairs.items()
         }
 
-        print(exchange_pairs)
-
-        prices = await cls.pairs_to_prices(pairs_dict=quote_coin_pairs)
+        prices = await cls.pairs_to_prices(
+            pairs_dict=quote_coin_pairs, quote_coin=quote_coin
+        )
         if not prices:
             raise Exception("Could not parse coin prices")
         # Update available pairs for the selected quote coin
