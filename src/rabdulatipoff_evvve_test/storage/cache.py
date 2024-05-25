@@ -1,22 +1,51 @@
-import emcache
+"""Cache storage methods and exceptions.
+
+Classes:
+    Cache: The cache client class.
+
+Exceptions:
+    SetValueError:
+"""
+
 from typing import Iterable
 from contextlib import asynccontextmanager
-from rabdulatipoff_evvve_test.config import memcache_config, cache_expiration
+
+import emcache
+from rabdulatipoff_evvve_test.config import MEMCACHE_CONFIG, CACHE_EXPIRATION
+
+
+class SetValueError(Exception):
+    """A cache key-value pair set/update error."""
 
 
 class Cache:
-    key_delimiter = "."
+    """The memcached client implementation class.
+
+    Attrs:
+        key_delimiter (str): The delimiter string for key flattening.
+    """
+
+    key_delimiter: str = "."
 
     @staticmethod
     @asynccontextmanager
     async def memcache_client(
-        addr: str = memcache_config["address"],
-        port: int = memcache_config["port"],
-        connect_timeout: float = memcache_config["connect_timeout"],
-        timeout: float = memcache_config["timeout"],
         *args,
+        addr: str = MEMCACHE_CONFIG["address"],
+        port: int = MEMCACHE_CONFIG["port"],
+        connect_timeout: float = MEMCACHE_CONFIG["connect_timeout"],
+        timeout: float = MEMCACHE_CONFIG["timeout"],
         **kwargs,
     ):
+        """The context manager for memcached async client.
+
+        Args:
+            addr (str): The memcached server address.
+            port (int): The memcached server address.
+            connect_timeout (float): The timeout for server connection requests.
+            timeout (float): The timeout for cache querying operations.
+        """
+
         client = await emcache.create_client(
             [
                 emcache.MemcachedHostAddress(addr, port),
@@ -34,9 +63,17 @@ class Cache:
             pass
 
     @classmethod
-    def get_path(cls, keys: str | Iterable[str], prefix: str = "prices"):
+    def get_path(cls, keys: str | Iterable[str], prefix: str = "prices") -> str:
+        """Construct a flattened path from keys.
+
+        Args:
+            keys (str | Iterable[str]): The key/sequence of ordered keys.
+            prefix (str): The key path prefix.
+
+        Returns:
+            str: A key string in a flattened path format."""
         path = [prefix]
-        if type(keys) is str:
+        if isinstance(keys, str):
             path.append(keys)
         else:
             path.extend(keys)
@@ -44,7 +81,16 @@ class Cache:
         return cls.key_delimiter.join(path)
 
     @classmethod
-    async def get(cls, key: str, json: bool = True, *args, **kwargs) -> str | None:
+    async def get(cls, key: str, *args, **kwargs) -> str | None:
+        """Get the value for a given `key`.
+
+        Args:
+            key (str): The cache key.
+
+        Returns:
+            str | None: The JSON data for the key, if defined.
+        """
+
         async with cls.memcache_client() as cache:
             data = await cache.get(key.encode("utf-8"), *args, **kwargs)
             if data:
@@ -56,10 +102,17 @@ class Cache:
         cls,
         key: str,
         value: str,
-        exptime=cache_expiration,
         *args,
+        exptime=CACHE_EXPIRATION,
         **kwargs,
     ) -> None:
+        """Set/update the `value` for a given `key`.
+
+        Args:
+            key (str): The cache key.
+            value (str): The JSON data for storage.
+        """
+
         async with cls.memcache_client() as cache:
             try:
                 await cache.set(
@@ -69,5 +122,5 @@ class Cache:
                     *args,
                     **kwargs,
                 )
-            except emcache.StorageCommandError:
-                raise Exception(f"Could not set value for key '{key}'")
+            except emcache.StorageCommandError as e:
+                raise SetValueError(f"Could not set value for key '{key}'") from e
