@@ -22,7 +22,7 @@ This project uses PDM for dependency/project management, keeping general configu
 Install it with:
 
 ``` sh
-$ pip install --user pd
+$ pip install --user pdm
 $ pdm self update
 ```
 
