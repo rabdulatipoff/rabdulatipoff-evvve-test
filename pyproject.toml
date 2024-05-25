@@ -23,6 +23,7 @@ distribution = false
 [tool.pdm.dev-dependencies]
 dev = [
     "ipython>=8.24.0",
+    "pylint>=3.2.2",
 ]
 pytest = [
     "pytest-cov>=5.0.0",
