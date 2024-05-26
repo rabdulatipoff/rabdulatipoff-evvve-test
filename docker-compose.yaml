@@ -11,6 +11,8 @@ services:
     restart: always
     expose:
       - $APP_PORT
+    ports:
+      - $APP_PORT:$APP_PORT
     env_file:
       - ./.env
     depends_on:
