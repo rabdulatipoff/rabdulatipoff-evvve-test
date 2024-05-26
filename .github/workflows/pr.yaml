@@ -1,0 +1,32 @@
+name: Validate Pull Request
+
+on:
+  pull_request: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional Commit
+        # You may pin to the exact commit or the version.
+        # uses: lab42/conventional-commit@b7f4f11251e6be393059fa59b28dea17776618c4
+        uses: lab42/conventional-commit@v0.2.0
+        with:
+          # Allowed commit types
+          allowed_types: # optional, default is build
+            chore
+            ci
+            docs
+            feat
+            fix
+            perf
+            refactor
+            revert
+            style
+            test
+          # Regular expression to validate description
+          description_regexp: '([\w ]+)' # optional, default is ([\w ]+)
+          # Make scope requires (boolean)
+          require_scope: false # optional, default is false
+          # Regular expression to validate scope. Only used when require_scope is true or when scope is provided.
+          scope_regexp: '(\w+)' # optional, default is (\w+)
