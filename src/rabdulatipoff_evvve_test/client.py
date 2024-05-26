@@ -6,9 +6,11 @@ Classes:
 
 import json
 from typing import Iterable
+
 from rabdulatipoff_evvve_test.storage.schemas import CoinPricePoint
 from rabdulatipoff_evvve_test.storage.cache import Cache
 from rabdulatipoff_evvve_test.api.parser import ExchangeAPIParser
+from rabdulatipoff_evvve_test.logger import logger
 from rabdulatipoff_evvve_test import config
 
 
@@ -42,11 +44,18 @@ class PricesClient:
         Returns:
             CoinPricePoint | None: A coin price object, if the coin was found by name.
         """
+
+        logger.debug(f"Getting prices for {base_coin}/{quote_coin}...")
+
         coin_name = base_coin.upper()
         available_coins = json.loads(await Cache.get(quote_coin) or "[]")
+
         if not available_coins:
             # Parse the exchanges and update the coin index
-            await ExchangeAPIParser.parse(quote_coin=quote_coin)
+            available_coins = tuple(
+                coin.name
+                for coin in await ExchangeAPIParser.parse(quote_coin=quote_coin)
+            )
 
         if coin_name in available_coins:
             price = json.loads(
